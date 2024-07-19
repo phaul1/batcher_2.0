@@ -34,19 +34,19 @@ echo
 echo_blue_bold "Enter private key:"
 read privateKeys
 echo
+echo_blue_bold "Enter contract address:"
+read contractAddress
+echo
 
 transactions=()
 
 while true; do
-    echo_blue_bold "Enter contract address (or 'done' to finish):"
-    read contractAddress
-    if [ "$contractAddress" == "done" ]; then
+    echo_blue_bold "Enter transaction data (in hex) (or 'done' to finish):"
+    read transactionData
+    if [ "$transactionData" == "done" ]; then
         break
     fi
 
-    echo_blue_bold "Enter transaction data (in hex):"
-    read transactionData
-    echo
     echo_blue_bold "Enter gas limit:"
     read gasLimit
     echo
@@ -57,7 +57,8 @@ while true; do
     read numberOfTransactions
     echo
 
-    transactions+=("{\"contractAddress\":\"$contractAddress\",\"transactionData\":\"$transactionData\",\"gasLimit\":\"$gasLimit\",\"gasPrice\":\"$gasPrice\",\"numberOfTransactions\":\"$numberOfTransactions\"}")
+    transaction="{\"transactionData\":\"$transactionData\",\"gasLimit\":\"$gasLimit\",\"gasPrice\":\"$gasPrice\",\"numberOfTransactions\":\"$numberOfTransactions\"}"
+    transactions+=("$transaction")
 
     echo
 done
@@ -81,11 +82,13 @@ const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
 const privateKeys = "${privateKeys}";
 
-const transactions = ${transactions[@]};
+const contractAddress = "${contractAddress}";
+
+const transactions = [${transactions[@]}];
 
 async function sendTransaction(wallet, txDetails) {
     const tx = {
-        to: txDetails.contractAddress,
+        to: contractAddress,
         value: 0,
         gasLimit: ethers.BigNumber.from(txDetails.gasLimit),
         gasPrice: ethers.utils.parseUnits(txDetails.gasPrice, 'gwei'),
