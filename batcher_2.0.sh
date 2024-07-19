@@ -74,6 +74,10 @@ echo
 
 temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 
+# Join transactions array into a JSON array string
+transactions_json=$(printf ",%s" "${transactions[@]}")
+transactions_json="[${transactions_json:1}]"
+
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
@@ -84,7 +88,7 @@ const privateKeys = "${privateKeys}";
 
 const contractAddress = "${contractAddress}";
 
-const transactions = [${transactions[@]}];
+const transactions = ${transactions_json};
 
 async function sendTransaction(wallet, txDetails) {
     const tx = {
