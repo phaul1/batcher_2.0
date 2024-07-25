@@ -67,11 +67,11 @@ const provider = new ethers.providers.JsonRpcProvider(providerURL);
 const privateKeys = "$privateKeys";
 
 // Arrays holding multiple transaction types' details
-const contractAddresses = ${contractAddresses[@]};
-const transactionDataList = ${transactionDataList[@]};
-const gasLimits = ${gasLimits[@]};
-const gasPrices = ${gasPrices[@]};
-const numberOfTransactionsList = ${numberOfTransactionsList[@]};
+const contractAddresses = ${JSON.stringify(contractAddresses)};
+const transactionDataList = ${JSON.stringify(transactionDataList)};
+const gasLimits = ${JSON.stringify(gasLimits)};
+const gasPrices = ${JSON.stringify(gasPrices)};
+const numberOfTransactionsList = ${JSON.stringify(numberOfTransactionsList)};
 
 async function sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice) {
     const tx = {
