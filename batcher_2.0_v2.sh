@@ -3,7 +3,6 @@
 function echo_blue_bold {
     echo -e "\033[1;34m$1\033[0m"
 }
-
 echo
 echo_blue_bold "Enter RPC URL of the network:"
 read providerURL
