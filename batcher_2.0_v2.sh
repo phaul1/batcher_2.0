@@ -3,51 +3,56 @@
 function echo_blue_bold {
     echo -e "\033[1;34m$1\033[0m"
 }
+
 echo
 echo_blue_bold "Enter RPC URL of the network:"
 read providerURL
 echo
+
 echo_blue_bold "Enter private key:"
 read privateKeys
 echo
-echo_blue_bold "Enter number of transaction types:"
-read numberOfTransactionTypes
-echo
 
+# Arrays to hold multiple transaction types' details
 declare -a contractAddresses
-declare -a transactionDataArray
+declare -a transactionDataList
 declare -a gasLimits
 declare -a gasPrices
+declare -a numberOfTransactionsList
 
-for ((i=1; i<=numberOfTransactionTypes; i++)); do
-    echo_blue_bold "Enter contract address for transaction type $i:"
+while true; do
+    echo_blue_bold "Enter contract address (or type 'done' to finish):"
     read contractAddress
+    if [[ "$contractAddress" == "done" ]]; then
+        break
+    fi
     contractAddresses+=("$contractAddress")
     
-    echo_blue_bold "Enter transaction data (in hex) for transaction type $i:"
+    echo_blue_bold "Enter transaction data (in hex):"
     read transactionData
-    transactionDataArray+=("$transactionData")
+    transactionDataList+=("$transactionData")
     
-    echo_blue_bold "Enter gas limit for transaction type $i:"
+    echo_blue_bold "Enter gas limit:"
     read gasLimit
     gasLimits+=("$gasLimit")
     
-    echo_blue_bold "Enter gas price (in gwei) for transaction type $i:"
+    echo_blue_bold "Enter gas price (in gwei):"
     read gasPrice
     gasPrices+=("$gasPrice")
+    
+    echo_blue_bold "Enter number of transactions to send for this type:"
+    read numberOfTransactions
+    numberOfTransactionsList+=("$numberOfTransactions")
+    
     echo
 done
 
-echo_blue_bold "Enter number of transactions to send per type:"
-read numberOfTransactionsPerType
-echo
-
 if ! npm list ethers@5.5.4 >/dev/null 2>&1; then
-  echo_blue_bold "Installing ethers..."
-  npm install ethers@5.5.4
-  echo
+    echo_blue_bold "Installing ethers..."
+    npm install ethers@5.5.4
+    echo
 else
-  echo_blue_bold "Ethers is already installed."
+    echo_blue_bold "Ethers is already installed."
 fi
 echo
 
@@ -56,28 +61,25 @@ temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
-const providerURL = "$providerURL";
+const providerURL = "${providerURL}";
 const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-const privateKeys = "$privateKeys";
+const privateKeys = "${privateKeys}";
 
-const contractAddresses = ${contractAddresses[@]};
-const transactionDataArray = ${transactionDataArray[@]};
-const gasLimits = ${gasLimits[@]};
-const gasPrices = ${gasPrices[@]};
-const numberOfTransactionsPerType = $numberOfTransactionsPerType;
+// Arrays holding multiple transaction types' details
+const contractAddresses = ${JSON.stringify(contractAddresses)};
+const transactionDataList = ${JSON.stringify(transactionDataList)};
+const gasLimits = ${JSON.stringify(gasLimits)};
+const gasPrices = ${JSON.stringify(gasPrices)};
+const numberOfTransactionsList = ${JSON.stringify(numberOfTransactionsList)};
 
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-}
-
-async function sendTransaction(wallet, txType) {
+async function sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice) {
     const tx = {
-        to: contractAddresses[txType],
+        to: contractAddress,
         value: 0,
-        gasLimit: ethers.BigNumber.from(gasLimits[txType]),
-        gasPrice: ethers.utils.parseUnits(gasPrices[txType], 'gwei'),
-        data: transactionDataArray[txType],
+        gasLimit: ethers.BigNumber.from(gasLimit),
+        gasPrice: ethers.utils.parseUnits(gasPrice, 'gwei'),
+        data: transactionData,
     };
 
     try {
@@ -93,13 +95,16 @@ async function sendTransaction(wallet, txType) {
 async function main() {
     const wallet = new ethers.Wallet(privateKeys, provider);
 
-    for (let txType = 0; txType < contractAddresses.length; txType++) {
-        for (let i = 0; i < numberOfTransactionsPerType; i++) {
-            console.log("Sending transaction", i + 1, "of type", txType + 1, "of", contractAddresses.length);
-            await sendTransaction(wallet, txType);
-            const randomDelay = getRandomInt(30000);
-            console.log("Waiting for", randomDelay, "ms before sending the next transaction...");
-            await new Promise(resolve => setTimeout(resolve, randomDelay));
+    for (let i = 0; i < contractAddresses.length; i++) {
+        const contractAddress = contractAddresses[i];
+        const transactionData = transactionDataList[i];
+        const gasLimit = gasLimits[i];
+        const gasPrice = gasPrices[i];
+        const numberOfTransactions = numberOfTransactionsList[i];
+
+        for (let j = 0; j < numberOfTransactions; j++) {
+            console.log(\`Sending transaction type \${i + 1} transaction \${j + 1} of \${numberOfTransactions}\`);
+            await sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice);
         }
     }
 }
