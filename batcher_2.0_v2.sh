@@ -60,17 +60,17 @@ temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
-const providerURL = "${providerURL}";
+const providerURL = "$providerURL";
 const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-const privateKeys = "${privateKeys}";
+const privateKeys = "$privateKeys";
 
 // Arrays holding multiple sets of transaction details
-const contractAddresses = ${JSON.stringify(contractAddresses)};
-const transactionDataList = ${JSON.stringify(transactionDataList)};
-const gasLimits = ${JSON.stringify(gasLimits)};
-const gasPrices = ${JSON.stringify(gasPrices)};
-const numberOfTransactionsList = ${JSON.stringify(numberOfTransactionsList)};
+const contractAddresses = ${contractAddresses[@]};
+const transactionDataList = ${transactionDataList[@]};
+const gasLimits = ${gasLimits[@]};
+const gasPrices = ${gasPrices[@]};
+const numberOfTransactionsList = ${numberOfTransactionsList[@]};
 
 async function sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice) {
     const tx = {
@@ -102,7 +102,7 @@ async function main() {
         const numberOfTransactions = numberOfTransactionsList[i];
 
         for (let j = 0; j < numberOfTransactions; j++) {
-            console.log("Sending transaction", j + 1, "of", numberOfTransactions, "to", contractAddress);
+            console.log(\`Sending transaction type \${i + 1} transaction \${j + 1} of \${numberOfTransactions}\`);
             await sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice);
         }
     }
