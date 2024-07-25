@@ -3,6 +3,7 @@
 function echo_blue_bold {
     echo -e "\033[1;34m$1\033[0m"
 }
+
 echo
 echo_blue_bold "Enter RPC URL of the network:"
 read providerURL
@@ -10,40 +11,21 @@ echo
 echo_blue_bold "Enter private key:"
 read privateKeys
 echo
-
-# Arrays to hold multiple sets of transaction details
-contractAddresses=()
-transactionDataList=()
-gasLimits=()
-gasPrices=()
-numberOfTransactionsList=()
-
-while true; do
-    echo_blue_bold "Enter contract address (or type 'done' to finish):"
-    read contractAddress
-    if [[ "$contractAddress" == "done" ]]; then
-        break
-    fi
-    contractAddresses+=("$contractAddress")
-    
-    echo_blue_bold "Enter transaction data (in hex):"
-    read transactionData
-    transactionDataList+=("$transactionData")
-    
-    echo_blue_bold "Enter gas limit:"
-    read gasLimit
-    gasLimits+=("$gasLimit")
-    
-    echo_blue_bold "Enter gas price (in gwei):"
-    read gasPrice
-    gasPrices+=("$gasPrice")
-    
-    echo_blue_bold "Enter number of transactions to send:"
-    read numberOfTransactions
-    numberOfTransactionsList+=("$numberOfTransactions")
-    
-    echo
-done
+echo_blue_bold "Enter contract addresses (comma-separated):"
+read contractAddresses
+echo
+echo_blue_bold "Enter transaction data (in hex) for each contract address (comma-separated):"
+read transactionDataList
+echo
+echo_blue_bold "Enter gas limit:"
+read gasLimit
+echo
+echo_blue_bold "Enter gas price (in gwei):"
+read gasPrice
+echo
+echo_blue_bold "Enter number of transactions to send per contract:"
+read numberOfTransactions
+echo
 
 if ! npm list ethers@5.5.4 >/dev/null 2>&1; then
   echo_blue_bold "Installing ethers..."
@@ -59,24 +41,25 @@ temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
-const providerURL = "$providerURL";
+const providerURL = "${providerURL}";
 const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-const privateKeys = "$privateKeys";
+const privateKeys = "${privateKeys}";
 
-// Arrays holding multiple sets of transaction details
-const contractAddresses = ${contractAddresses[@]};
-const transactionDataList = ${transactionDataList[@]};
-const gasLimits = ${gasLimits[@]};
-const gasPrices = ${gasPrices[@]};
-const numberOfTransactionsList = ${numberOfTransactionsList[@]};
+const contractAddresses = "${contractAddresses}".split(",");
+const transactionDataList = "${transactionDataList}".split(",");
 
-async function sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice) {
+const gasLimit = ethers.BigNumber.from(${gasLimit});
+const gasPrice = ethers.utils.parseUnits("${gasPrice}", 'gwei');
+
+const numberOfTransactions = ${numberOfTransactions};
+
+async function sendTransaction(wallet, contractAddress, transactionData) {
     const tx = {
         to: contractAddress,
         value: 0,
-        gasLimit: ethers.BigNumber.from(gasLimit),
-        gasPrice: ethers.utils.parseUnits(gasPrice, 'gwei'),
+        gasLimit: gasLimit,
+        gasPrice: gasPrice,
         data: transactionData,
     };
 
@@ -96,13 +79,10 @@ async function main() {
     for (let i = 0; i < contractAddresses.length; i++) {
         const contractAddress = contractAddresses[i];
         const transactionData = transactionDataList[i];
-        const gasLimit = gasLimits[i];
-        const gasPrice = gasPrices[i];
-        const numberOfTransactions = numberOfTransactionsList[i];
 
         for (let j = 0; j < numberOfTransactions; j++) {
-            console.log(\`Sending transaction type \${i + 1} transaction \${j + 1} of \${numberOfTransactions}\`);
-            await sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice);
+            console.log("Sending transaction", j + 1, "of", numberOfTransactions, "to contract", contractAddress);
+            await sendTransaction(wallet, contractAddress, transactionData);
         }
     }
 }
@@ -114,5 +94,5 @@ NODE_PATH=$(npm root -g):$(pwd)/node_modules node $temp_node_file
 
 rm $temp_node_file
 echo
-echo_blue_bold "Follow @iam_reggiehub on X for more guide like this"
+echo_blue_bold "Follow @iam_reggiehub on X for more guides like this"
 echo
