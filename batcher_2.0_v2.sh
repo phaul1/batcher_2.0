@@ -58,7 +58,7 @@ echo
 
 temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 
-cat << EOF > $temp_node_file
+cat << 'EOF' > $temp_node_file
 const ethers = require("ethers");
 
 const providerURL = "${providerURL}";
@@ -111,6 +111,15 @@ async function main() {
 
 main().catch(console.error);
 EOF
+
+# Replace the placeholders with actual values
+sed -i "s/\${providerURL}/$providerURL/g" $temp_node_file
+sed -i "s/\${privateKeys}/$privateKeys/g" $temp_node_file
+sed -i "s/\${JSON.stringify(contractAddresses)}/$(printf '%s\n' "${contractAddresses[@]}" | jq -R . | jq -s .)/g" $temp_node_file
+sed -i "s/\${JSON.stringify(transactionDataList)}/$(printf '%s\n' "${transactionDataList[@]}" | jq -R . | jq -s .)/g" $temp_node_file
+sed -i "s/\${JSON.stringify(gasLimits)}/$(printf '%s\n' "${gasLimits[@]}" | jq -R . | jq -s .)/g" $temp_node_file
+sed -i "s/\${JSON.stringify(gasPrices)}/$(printf '%s\n' "${gasPrices[@]}" | jq -R . | jq -s .)/g" $temp_node_file
+sed -i "s/\${JSON.stringify(numberOfTransactionsList)}/$(printf '%s\n' "${numberOfTransactionsList[@]}" | jq -R . | jq -s .)/g" $temp_node_file
 
 NODE_PATH=$(npm root -g):$(pwd)/node_modules node $temp_node_file
 
