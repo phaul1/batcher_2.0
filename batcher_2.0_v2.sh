@@ -14,11 +14,11 @@ read privateKeys
 echo
 
 # Arrays to hold multiple transaction types' details
-declare -a contractAddresses
-declare -a transactionDataList
-declare -a gasLimits
-declare -a gasPrices
-declare -a numberOfTransactionsList
+contractAddresses=()
+transactionDataList=()
+gasLimits=()
+gasPrices=()
+numberOfTransactionsList=()
 
 while true; do
     echo_blue_bold "Enter contract address (or type 'done' to finish):"
