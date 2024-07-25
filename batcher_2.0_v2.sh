@@ -58,20 +58,27 @@ echo
 
 temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 
-cat << 'EOF' > $temp_node_file
+# Create JSON string representations of the arrays
+contractAddressesJson=$(printf '%s\n' "${contractAddresses[@]}" | jq -R . | jq -s .)
+transactionDataListJson=$(printf '%s\n' "${transactionDataList[@]}" | jq -R . | jq -s .)
+gasLimitsJson=$(printf '%s\n' "${gasLimits[@]}" | jq -R . | jq -s .)
+gasPricesJson=$(printf '%s\n' "${gasPrices[@]}" | jq -R . | jq -s .)
+numberOfTransactionsListJson=$(printf '%s\n' "${numberOfTransactionsList[@]}" | jq -R . | jq -s .)
+
+cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
-const providerURL = "${providerURL}";
+const providerURL = "$providerURL";
 const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-const privateKeys = "${privateKeys}";
+const privateKeys = "$privateKeys";
 
 // Arrays holding multiple transaction types' details
-const contractAddresses = ${JSON.stringify(contractAddresses)};
-const transactionDataList = ${JSON.stringify(transactionDataList)};
-const gasLimits = ${JSON.stringify(gasLimits)};
-const gasPrices = ${JSON.stringify(gasPrices)};
-const numberOfTransactionsList = ${JSON.stringify(numberOfTransactionsList)};
+const contractAddresses = $contractAddressesJson;
+const transactionDataList = $transactionDataListJson;
+const gasLimits = $gasLimitsJson;
+const gasPrices = $gasPricesJson;
+const numberOfTransactionsList = $numberOfTransactionsListJson;
 
 async function sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice) {
     const tx = {
@@ -111,15 +118,6 @@ async function main() {
 
 main().catch(console.error);
 EOF
-
-# Replace the placeholders with actual values
-sed -i "s/\${providerURL}/$providerURL/g" $temp_node_file
-sed -i "s/\${privateKeys}/$privateKeys/g" $temp_node_file
-sed -i "s/\${JSON.stringify(contractAddresses)}/$(printf '%s\n' "${contractAddresses[@]}" | jq -R . | jq -s .)/g" $temp_node_file
-sed -i "s/\${JSON.stringify(transactionDataList)}/$(printf '%s\n' "${transactionDataList[@]}" | jq -R . | jq -s .)/g" $temp_node_file
-sed -i "s/\${JSON.stringify(gasLimits)}/$(printf '%s\n' "${gasLimits[@]}" | jq -R . | jq -s .)/g" $temp_node_file
-sed -i "s/\${JSON.stringify(gasPrices)}/$(printf '%s\n' "${gasPrices[@]}" | jq -R . | jq -s .)/g" $temp_node_file
-sed -i "s/\${JSON.stringify(numberOfTransactionsList)}/$(printf '%s\n' "${numberOfTransactionsList[@]}" | jq -R . | jq -s .)/g" $temp_node_file
 
 NODE_PATH=$(npm root -g):$(pwd)/node_modules node $temp_node_file
 
