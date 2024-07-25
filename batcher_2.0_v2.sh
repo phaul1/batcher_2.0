@@ -8,12 +8,11 @@ echo
 echo_blue_bold "Enter RPC URL of the network:"
 read providerURL
 echo
-
 echo_blue_bold "Enter private key:"
 read privateKeys
 echo
 
-# Arrays to hold multiple transaction types' details
+# Arrays to hold multiple sets of transaction details
 contractAddresses=()
 transactionDataList=()
 gasLimits=()
@@ -40,7 +39,7 @@ while true; do
     read gasPrice
     gasPrices+=("$gasPrice")
     
-    echo_blue_bold "Enter number of transactions to send for this type:"
+    echo_blue_bold "Enter number of transactions to send:"
     read numberOfTransactions
     numberOfTransactionsList+=("$numberOfTransactions")
     
@@ -48,11 +47,11 @@ while true; do
 done
 
 if ! npm list ethers@5.5.4 >/dev/null 2>&1; then
-    echo_blue_bold "Installing ethers..."
-    npm install ethers@5.5.4
-    echo
+  echo_blue_bold "Installing ethers..."
+  npm install ethers@5.5.4
+  echo
 else
-    echo_blue_bold "Ethers is already installed."
+  echo_blue_bold "Ethers is already installed."
 fi
 echo
 
@@ -61,12 +60,12 @@ temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
-const providerURL = "$providerURL";
+const providerURL = "${providerURL}";
 const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-const privateKeys = "$privateKeys";
+const privateKeys = "${privateKeys}";
 
-// Arrays holding multiple transaction types' details
+// Arrays holding multiple sets of transaction details
 const contractAddresses = ${JSON.stringify(contractAddresses)};
 const transactionDataList = ${JSON.stringify(transactionDataList)};
 const gasLimits = ${JSON.stringify(gasLimits)};
@@ -103,7 +102,7 @@ async function main() {
         const numberOfTransactions = numberOfTransactionsList[i];
 
         for (let j = 0; j < numberOfTransactions; j++) {
-            console.log(\`Sending transaction type \${i + 1} transaction \${j + 1} of \${numberOfTransactions}\`);
+            console.log("Sending transaction", j + 1, "of", numberOfTransactions, "to", contractAddress);
             await sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice);
         }
     }
