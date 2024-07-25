@@ -58,13 +58,6 @@ echo
 
 temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 
-# Create JSON string representations of the arrays
-contractAddressesJson=$(printf '%s\n' "${contractAddresses[@]}" | jq -R . | jq -s .)
-transactionDataListJson=$(printf '%s\n' "${transactionDataList[@]}" | jq -R . | jq -s .)
-gasLimitsJson=$(printf '%s\n' "${gasLimits[@]}" | jq -R . | jq -s .)
-gasPricesJson=$(printf '%s\n' "${gasPrices[@]}" | jq -R . | jq -s .)
-numberOfTransactionsListJson=$(printf '%s\n' "${numberOfTransactionsList[@]}" | jq -R . | jq -s .)
-
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
@@ -74,11 +67,11 @@ const provider = new ethers.providers.JsonRpcProvider(providerURL);
 const privateKeys = "$privateKeys";
 
 // Arrays holding multiple transaction types' details
-const contractAddresses = $contractAddressesJson;
-const transactionDataList = $transactionDataListJson;
-const gasLimits = $gasLimitsJson;
-const gasPrices = $gasPricesJson;
-const numberOfTransactionsList = $numberOfTransactionsListJson;
+const contractAddresses = ${contractAddresses[@]};
+const transactionDataList = ${transactionDataList[@]};
+const gasLimits = ${gasLimits[@]};
+const gasPrices = ${gasPrices[@]};
+const numberOfTransactionsList = ${numberOfTransactionsList[@]};
 
 async function sendTransaction(wallet, contractAddress, transactionData, gasLimit, gasPrice) {
     const tx = {
