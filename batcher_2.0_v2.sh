@@ -56,16 +56,16 @@ temp_node_file=$(mktemp /tmp/node_script.XXXXXX.js)
 cat << EOF > $temp_node_file
 const ethers = require("ethers");
 
-const providerURL = "${providerURL}";
+const providerURL = "$providerURL";
 const provider = new ethers.providers.JsonRpcProvider(providerURL);
 
-const privateKeys = "${privateKeys}";
+const privateKeys = "$privateKeys";
 
-const contractAddresses = ${JSON.stringify(contractAddresses)};
-const transactionDataArray = ${JSON.stringify(transactionDataArray)};
-const gasLimits = ${JSON.stringify(gasLimits)};
-const gasPrices = ${JSON.stringify(gasPrices)};
-const numberOfTransactionsPerType = ${numberOfTransactionsPerType};
+const contractAddresses = ${contractAddresses[@]};
+const transactionDataArray = ${transactionDataArray[@]};
+const gasLimits = ${gasLimits[@]};
+const gasPrices = ${gasPrices[@]};
+const numberOfTransactionsPerType = $numberOfTransactionsPerType;
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
